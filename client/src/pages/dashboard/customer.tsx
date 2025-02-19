@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,8 @@ import {
   Activity,
   History,
   MessageSquare,
-  Bell
+  Bell,
+  X
 } from "lucide-react";
 import TransactionHistory from "@/components/transaction-history";
 import FraudAlert from "@/components/fraud-alert";
@@ -18,6 +20,7 @@ import AnalyticsChart from "@/components/analytics-chart";
 
 export default function CustomerDashboard() {
   const { user, logoutMutation } = useAuth();
+  const [showChat, setShowChat] = useState(false);
 
   const { data: transactions, isLoading: loadingTransactions } = useQuery({
     queryKey: [`/api/transactions/${user?.id}`],
@@ -122,21 +125,40 @@ export default function CustomerDashboard() {
               </CardContent>
             </Card>
 
-            {/* BankBuddy Assistant Card */}
-            <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/10">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <MessageSquare className="h-5 w-5 text-accent" />
-                  <span>BankBuddy Assistant</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Chatbot />
-              </CardContent>
-            </Card>
+            {/* BankBuddy Assistant Card - Only show when chat is open */}
+            {showChat && (
+              <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/10">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="flex items-center space-x-2">
+                    <MessageSquare className="h-5 w-5 text-accent" />
+                    <span>BankBuddy Assistant</span>
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setShowChat(false)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <Chatbot />
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </main>
+
+      {/* Floating Chat Button */}
+      {!showChat && (
+        <Button
+          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg"
+          onClick={() => setShowChat(true)}
+        >
+          <MessageSquare className="h-6 w-6" />
+        </Button>
+      )}
     </div>
   );
 }
