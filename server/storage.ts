@@ -10,18 +10,34 @@ const sampleTransactions: Transaction[] = [
   {
     id: 1,
     userId: 1,
-    amount: "3000.00",
+    amount: "415000.00",
     type: "deposit",
-    description: "Salary Advance",
-    timestamp: new Date("2024-02-15").toISOString(),
+    description: "Salary Deposit",
+    timestamp: new Date("2024-01-15").toISOString(),
   },
   {
     id: 2,
     userId: 1,
-    amount: "2000.00",
+    amount: "124500.00",
+    type: "withdrawal",
+    description: "Rent Payment",
+    timestamp: new Date("2024-01-20").toISOString(),
+  },
+  {
+    id: 3,
+    userId: 1,
+    amount: "166000.00",
     type: "deposit",
-    description: "Savings Transfer",
-    timestamp: new Date("2024-02-18").toISOString(),
+    description: "Investment Returns",
+    timestamp: new Date("2024-02-01").toISOString(),
+  },
+  {
+    id: 4,
+    userId: 1,
+    amount: "66400.00",
+    type: "withdrawal",
+    description: "Utility Bills",
+    timestamp: new Date("2024-02-10").toISOString(),
   },
 ];
 
@@ -65,11 +81,10 @@ export class MemStorage implements IStorage {
     const sampleUser: User = {
       id: 1,
       username: "abhay0123",
-      // This is a hashed version of "1234"
-      password: "b250535432b380a8c7c5cc5c5e0d2d46ce0ba224d05ef4975bb4210810f41ac0e64e43f4c4ebf2f9fd81d380a6a0f2d4c6ade9bf7e32559d0ef2fe5e3f53f300.8e8d1a3c62e3c8a0",
+      password: "1234",
       role: "customer",
       fullName: "Abhay Borase",
-      balance: "5000.00",
+      balance: "258000.00",
     };
 
     this.users.set(1, sampleUser);

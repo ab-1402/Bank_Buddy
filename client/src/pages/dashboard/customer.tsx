@@ -2,7 +2,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, LogOut } from "lucide-react";
+import { 
+  Loader2, 
+  LogOut, 
+  Wallet, 
+  Activity,
+  History,
+  MessageSquare,
+  Bell
+} from "lucide-react";
 import TransactionHistory from "@/components/transaction-history";
 import FraudAlert from "@/components/fraud-alert";
 import Chatbot from "@/components/chatbot";
@@ -30,16 +38,21 @@ export default function CustomerDashboard() {
   const balance = parseFloat(user?.balance || "0");
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/50">
+      {/* Enhanced Header */}
+      <div className="bg-primary text-primary-foreground">
         <div className="flex h-16 items-center px-4 container">
-          <h1 className="text-lg font-semibold">BankBuddy</h1>
+          <div className="flex items-center space-x-2">
+            <Wallet className="h-6 w-6" />
+            <h1 className="text-xl font-bold">BankBuddy</h1>
+          </div>
           <div className="ml-auto flex items-center space-x-4">
-            <span>Welcome, {user?.fullName}</span>
+            <span className="font-medium">Welcome, {user?.fullName}</span>
             <Button 
               variant="ghost" 
               size="icon"
               onClick={() => logoutMutation.mutate()}
+              className="hover:bg-primary-foreground/10"
             >
               <LogOut className="h-5 w-5" />
             </Button>
@@ -47,53 +60,82 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
-      <main className="container py-6 grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">
-              ₹850400.00
-            </div>
-          </CardContent>
-        </Card>
+      <main className="container py-8">
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Balance Card with enhanced styling */}
+          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/10">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Wallet className="h-5 w-5 text-primary" />
+                <span>Account Balance</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-bold text-primary">
+                ₹{balance.toLocaleString('en-IN', { 
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">Available Balance</p>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Transaction Analysis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AnalyticsChart data={transactions || []} />
-          </CardContent>
-        </Card>
+          {/* Transaction Analysis Card */}
+          <Card className="bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/10">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Activity className="h-5 w-5 text-secondary" />
+                <span>Transaction Analysis</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AnalyticsChart data={transactions || []} />
+            </CardContent>
+          </Card>
 
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <TransactionHistory transactions={transactions || []} />
-          </CardContent>
-        </Card>
+          {/* Recent Transactions Card */}
+          <Card className="md:col-span-2 bg-card">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <History className="h-5 w-5" />
+                <span>Recent Transactions</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TransactionHistory transactions={transactions || []} />
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Fraud Alerts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FraudAlert alerts={fraudAlerts || []} />
-          </CardContent>
-        </Card>
+          {/* Alert and Chatbot Section */}
+          <div className="md:col-span-2 grid gap-6 md:grid-cols-2">
+            {/* Fraud Alerts Card */}
+            <Card className="bg-gradient-to-br from-destructive/5 to-destructive/10 border-destructive/10">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Bell className="h-5 w-5 text-destructive" />
+                  <span>Fraud Alerts</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <FraudAlert alerts={fraudAlerts || []} />
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>BankBuddy Assistant</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Chatbot />
-          </CardContent>
-        </Card>
+            {/* BankBuddy Assistant Card */}
+            <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/10">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <MessageSquare className="h-5 w-5 text-accent" />
+                  <span>BankBuddy Assistant</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Chatbot />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </main>
     </div>
   );
