@@ -4,7 +4,9 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SendHorizontal } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Account } from "@shared/schema";
+import { queryClient } from "@/lib/queryClient";
 
 type Message = {
   id: number;
@@ -33,24 +35,41 @@ type ChatbotProps = {
 export default function Chatbot({ onClose }: ChatbotProps) {
   const { user } = useAuth();
 
-  // Add query to get fresh user data
   const { data: userData } = useQuery({
     queryKey: ['/api/user'],
   });
 
-  const balance = parseFloat(userData?.balance || "0");
+  const balance = userData?.balance ? parseFloat(userData.balance) : 0;
   const [transferState, setTransferState] = useState<TransferState>({ step: "none" });
 
-  const { data: upiAccount } = useQuery({
+  const { data: upiAccount } = useQuery<Account>({
     queryKey: ['/api/accounts/upi', transferState.upiId],
-    enabled: transferState.step === "initial" && !!transferState.upiId,
+    enabled: !!transferState.upiId,
+  });
+
+  const transferMutation = useMutation({
+    mutationFn: async ({ amount, toUpiId }: { amount: number, toUpiId: string }) => {
+      const response = await fetch('/api/transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, toUpiId }),
+      });
+      if (!response.ok) {
+        throw new Error('Transfer failed');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    },
   });
 
   const responses = {
-    balance: `your balance is ₹${formatCurrency(balance)}.`,
-    transaction: `Your recent 3 transactions are  1)Salary Deposit:-₹4,15,000.00
-2)Rent paid:-₹12,500.00
-3)Transfer to xxxxxx123:Rohan:-₹1,24,500.00`,
+    balance: `Your balance is ₹${formatCurrency(balance)}.`,
+    transaction: `Your recent 3 transactions are:
+1) Salary Deposit: ₹4,15,000.00
+2) Rent paid: ₹12,500.00
+3) Transfer to xxxxxx123: Rohan: ₹1,24,500.00`,
     fraud: "If you notice any suspicious activity, please check the fraud alerts section.",
     help: "I'm here to help! You can ask me about your balance, transactions, fraud alerts, or transferring money.",
     transfer: {
@@ -68,14 +87,14 @@ export default function Chatbot({ onClose }: ChatbotProps) {
     }
   };
 
-  function handleTransfer(input: string): string {
+  async function handleTransfer(input: string): Promise<string> {
     switch (transferState.step) {
       case "initial":
-        const upiId = input.trim();
         if (!upiAccount) {
-          return responses.transfer.upiNotFound(upiId);
+          setTransferState({ step: "none" });
+          return responses.transfer.upiNotFound(input.trim());
         }
-        setTransferState({ step: "upi", upiId });
+        setTransferState({ step: "upi", upiId: input.trim() });
         return responses.transfer.upi;
 
       case "upi":
@@ -90,10 +109,19 @@ export default function Chatbot({ onClose }: ChatbotProps) {
         return responses.transfer.amount(amount, upiAccount.upiId, upiAccount.accountHolderName);
 
       case "confirm":
-        if (input.toLowerCase() === "yes") {
-          const result = responses.transfer.success(transferState.amount!, upiAccount.accountHolderName);
-          setTransferState({ step: "none" });
-          return result;
+        if (input.toLowerCase() === "yes" && transferState.amount && transferState.upiId) {
+          try {
+            await transferMutation.mutateAsync({
+              amount: transferState.amount,
+              toUpiId: transferState.upiId
+            });
+            const result = responses.transfer.success(transferState.amount, upiAccount.accountHolderName);
+            setTransferState({ step: "none" });
+            return result;
+          } catch (error) {
+            setTransferState({ step: "none" });
+            return "Sorry, the transfer failed. Please try again later.";
+          }
         } else {
           setTransferState({ step: "none" });
           return responses.transfer.cancelled;

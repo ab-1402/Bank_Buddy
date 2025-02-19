@@ -5,6 +5,7 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { sql } from "drizzle-orm";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -136,6 +137,62 @@ export class DatabaseStorage implements IStorage {
   async getAccountByUpiId(upiId: string): Promise<Account | undefined> {
     const [account] = await db.select().from(accounts).where(eq(accounts.upiId, upiId));
     return account;
+  }
+
+  async transferMoney(userId: number, amount: number, toUpiId: string): Promise<boolean> {
+    // Start a transaction to ensure atomicity
+    return await db.transaction(async (tx) => {
+      // Get sender's user record
+      const [sender] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!sender) {
+        throw new Error("Sender not found");
+      }
+
+      // Get receiver's account
+      const [receiver] = await tx
+        .select()
+        .from(accounts)
+        .where(eq(accounts.upiId, toUpiId));
+
+      if (!receiver) {
+        throw new Error("Receiver UPI ID not found");
+      }
+
+      // Check if sender has sufficient balance
+      if (parseFloat(sender.balance) < amount) {
+        throw new Error("Insufficient balance");
+      }
+
+      // Update sender's balance
+      await tx
+        .update(users)
+        .set({
+          balance: sql`${users.balance} - ${amount}`,
+        })
+        .where(eq(users.id, userId));
+
+      // Update receiver's balance
+      await tx
+        .update(accounts)
+        .set({
+          balance: sql`${accounts.balance} + ${amount}`,
+        })
+        .where(eq(accounts.upiId, toUpiId));
+
+      // Record the transaction
+      await tx.insert(transactions).values({
+        userId,
+        amount: amount.toString(),
+        type: "transfer",
+        description: `Transfer to ${receiver.accountHolderName} (${toUpiId})`,
+      });
+
+      return true;
+    });
   }
 }
 
