@@ -110,50 +110,43 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
 
-          {/* Alert and Chatbot Section */}
-          <div className="md:col-span-2 grid gap-6 md:grid-cols-2">
-            {/* Fraud Alerts Card */}
-            <Card className="bg-gradient-to-br from-destructive/5 to-destructive/10 border-destructive/10">
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Bell className="h-5 w-5 text-destructive" />
-                  <span>Fraud Alerts</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FraudAlert alerts={fraudAlerts || []} />
-              </CardContent>
-            </Card>
-
-            {/* BankBuddy Assistant Card - Only show when chat is open */}
-            {showChat && (
-              <Card className="bg-gradient-to-br from-accent/5 to-accent/10 border-accent/10">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="flex items-center space-x-2">
-                    <MessageSquare className="h-5 w-5 text-accent" />
-                    <span>BankBuddy Assistant</span>
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setShowChat(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <Chatbot />
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          {/* Alert Section */}
+          <Card className="md:col-span-2 bg-gradient-to-br from-destructive/5 to-destructive/10 border-destructive/10">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Bell className="h-5 w-5 text-destructive" />
+                <span>Fraud Alerts</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <FraudAlert alerts={fraudAlerts || []} />
+            </CardContent>
+          </Card>
         </div>
       </main>
 
-      {/* Floating Chat Button */}
-      {!showChat && (
+      {/* Floating Chat Button and Chat Window */}
+      {showChat ? (
+        <div className="fixed bottom-6 right-6 w-96 bg-background border rounded-lg shadow-xl animate-in slide-in-from-bottom-2">
+          <div className="flex items-center justify-between p-4 border-b">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              <span className="font-semibold">BankBuddy Assistant</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowChat(false)}
+              className="h-8 w-8"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <Chatbot />
+        </div>
+      ) : (
         <Button
-          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg"
+          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg animate-bounce-slow"
           onClick={() => setShowChat(true)}
         >
           <MessageSquare className="h-6 w-6" />

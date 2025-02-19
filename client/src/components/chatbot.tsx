@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SendHorizontal } from "lucide-react";
+import { SendHorizontal, X } from "lucide-react";
 
 type Message = {
   id: number;
@@ -22,14 +22,18 @@ const responses = {
 
 function getBotResponse(input: string): string {
   const lowercaseInput = input.toLowerCase();
-  
+
   if (lowercaseInput.includes("balance")) return responses.balance;
   if (lowercaseInput.includes("transaction")) return responses.transaction;
   if (lowercaseInput.includes("fraud")) return responses.fraud;
   return responses.help;
 }
 
-export default function Chatbot() {
+type ChatbotProps = {
+  onClose?: () => void;
+};
+
+export default function Chatbot({ onClose }: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
