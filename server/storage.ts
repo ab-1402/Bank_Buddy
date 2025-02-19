@@ -22,31 +22,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   private async initializeDemoData() {
-    // Check if we have any accounts
-    const existingAccounts = await db.select().from(accounts);
+    try {
+      // Check if we have any accounts
+      const existingAccounts = await db.select().from(accounts);
 
-    if (existingAccounts.length === 0) {
-      // Insert demo accounts
-      await db.insert(accounts).values([
-        {
-          accountNumber: "1234567890",
-          accountHolderName: "Rohan Sharma",
-          upiId: "rohan@upi",
-          balance: "50000.00",
-        },
-        {
-          accountNumber: "9876543210",
-          accountHolderName: "Priya Patel",
-          upiId: "priya@upi",
-          balance: "75000.00",
-        },
-        {
-          accountNumber: "5678901234",
-          accountHolderName: "Amit Kumar",
-          upiId: "amit@upi",
-          balance: "100000.00",
-        }
-      ]);
+      if (existingAccounts.length === 0) {
+        // Insert demo accounts
+        await db.insert(accounts).values([
+          {
+            accountNumber: "1234567890",
+            accountHolderName: "Rohan Sharma",
+            upiId: "rohan@upi",
+            balance: "50000.00",
+          },
+          {
+            accountNumber: "9876543210",
+            accountHolderName: "Priya Patel",
+            upiId: "priya@upi",
+            balance: "75000.00",
+          },
+          {
+            accountNumber: "5678901234",
+            accountHolderName: "Amit Kumar",
+            upiId: "amit@upi",
+            balance: "100000.00",
+          }
+        ]);
+
+        console.log("Demo accounts initialized successfully");
+      }
+    } catch (error) {
+      console.error("Error initializing demo data:", error);
     }
   }
 
