@@ -39,12 +39,12 @@ export default function Chatbot({ onClose }: ChatbotProps) {
     queryKey: ['/api/user'],
   });
 
-  const balance = userData?.balance ? parseFloat(userData.balance) : 0;
+  const balance = userData?.balance ?? 0;
   const [transferState, setTransferState] = useState<TransferState>({ step: "none" });
 
-  const { data: upiAccount } = useQuery<Account>({
+  const { data: upiAccount, isLoading: isUpiLoading } = useQuery<Account>({
     queryKey: ['/api/accounts/upi', transferState.upiId],
-    enabled: !!transferState.upiId,
+    enabled: transferState.step === "initial" && !!transferState.upiId,
   });
 
   const transferMutation = useMutation({
@@ -84,12 +84,17 @@ export default function Chatbot({ onClose }: ChatbotProps) {
         `Successfully transferred ₹${formatCurrency(amount)} to ${accountHolder}.`,
       cancelled: "Transfer cancelled. Is there anything else I can help you with?",
       invalid: "Please enter a valid amount (numbers only).",
+      loading: "Please wait while I verify the UPI ID..."
     }
   };
 
   async function handleTransfer(input: string): Promise<string> {
     switch (transferState.step) {
       case "initial":
+        setTransferState({ step: "initial", upiId: input.trim() });
+        if (isUpiLoading) {
+          return responses.transfer.loading;
+        }
         if (!upiAccount) {
           setTransferState({ step: "none" });
           return responses.transfer.upiNotFound(input.trim());
@@ -106,7 +111,7 @@ export default function Chatbot({ onClose }: ChatbotProps) {
           return responses.transfer.insufficient(amount);
         }
         setTransferState({ ...transferState, step: "confirm", amount });
-        return responses.transfer.amount(amount, upiAccount.upiId, upiAccount.accountHolderName);
+        return responses.transfer.amount(amount, transferState.upiId!, upiAccount.accountHolderName);
 
       case "confirm":
         if (input.toLowerCase() === "yes" && transferState.amount && transferState.upiId) {
@@ -132,7 +137,7 @@ export default function Chatbot({ onClose }: ChatbotProps) {
     }
   }
 
-  function getBotResponse(input: string): string {
+  function getBotResponse(input: string): string | Promise<string> {
     const lowercaseInput = input.toLowerCase();
 
     if (transferState.step !== "none") {
@@ -170,12 +175,7 @@ export default function Chatbot({ onClose }: ChatbotProps) {
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
-    let response;
-    if (transferState.step !== "none") {
-      response = await handleTransfer(input);
-    } else {
-      response = getBotResponse(input);
-    }
+    const response = await getBotResponse(input);
 
     const botMessage: Message = {
       id: messages.length + 2,
