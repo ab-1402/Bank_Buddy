@@ -10,7 +10,7 @@ const sampleTransactions: Transaction[] = [
   {
     id: 1,
     userId: 1,
-    amount: "5000.00",
+    amount: "415000.00",
     type: "deposit",
     description: "Salary Deposit",
     timestamp: new Date("2024-01-15").toISOString(),
@@ -18,7 +18,7 @@ const sampleTransactions: Transaction[] = [
   {
     id: 2,
     userId: 1,
-    amount: "1500.00",
+    amount: "124500.00",
     type: "withdrawal",
     description: "Rent Payment",
     timestamp: new Date("2024-01-20").toISOString(),
@@ -26,7 +26,7 @@ const sampleTransactions: Transaction[] = [
   {
     id: 3,
     userId: 1,
-    amount: "2000.00",
+    amount: "166000.00",
     type: "deposit",
     description: "Investment Returns",
     timestamp: new Date("2024-02-01").toISOString(),
@@ -34,7 +34,7 @@ const sampleTransactions: Transaction[] = [
   {
     id: 4,
     userId: 1,
-    amount: "800.00",
+    amount: "66400.00",
     type: "withdrawal",
     description: "Utility Bills",
     timestamp: new Date("2024-02-10").toISOString(),
@@ -84,7 +84,7 @@ export class MemStorage implements IStorage {
       password: "hashed_password_here",
       role: "customer",
       fullName: "Abhay Kumar",
-      balance: "8700.00",
+      balance: "722100.00",
     };
 
     this.users.set(1, sampleUser);

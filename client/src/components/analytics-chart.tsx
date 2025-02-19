@@ -8,7 +8,7 @@ type AnalyticsChartProps = {
 };
 
 export default function AnalyticsChart({ data, type = "transactions" }: AnalyticsChartProps) {
-  const chartData = type === "transactions" 
+  const chartData = type === "transactions"
     ? processTransactionData(data)
     : processCustomerData(data);
 
@@ -28,10 +28,13 @@ export default function AnalyticsChart({ data, type = "transactions" }: Analytic
             fontSize={12}
             tickLine={false}
             axisLine={false}
-            tickFormatter={(value) => `$${value}`}
+            tickFormatter={(value) => `₹${value.toLocaleString('en-IN')}`}
           />
-          <Tooltip 
-            formatter={(value: number) => [`$${value.toFixed(2)}`, "Amount"]}
+          <Tooltip
+            formatter={(value: number) => [`₹${value.toLocaleString('en-IN', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })}`, "Amount"]}
             labelFormatter={(label) => `Date: ${label}`}
           />
           <Line

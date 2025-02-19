@@ -43,8 +43,11 @@ export default function TransactionHistory({ transactions }: TransactionHistoryP
                 </div>
               </div>
               <span className={`font-medium ${colorClass}`}>
-                {transaction.type === "withdrawal" ? "-" : "+"}$
-                {Number(transaction.amount).toFixed(2)}
+                {transaction.type === "withdrawal" ? "-" : "+"}₹
+                {Number(transaction.amount).toLocaleString('en-IN', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
               </span>
             </div>
           );

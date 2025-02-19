@@ -54,7 +54,10 @@ export default function CustomerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              ${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ₹{balance.toLocaleString('en-IN', { 
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+              })}
             </div>
           </CardContent>
         </Card>
