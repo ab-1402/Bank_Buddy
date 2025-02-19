@@ -158,7 +158,7 @@ export default function Chatbot({ onClose }: ChatbotProps) {
   ]);
   const [input, setInput] = useState("");
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage: Message = {
@@ -167,14 +167,23 @@ export default function Chatbot({ onClose }: ChatbotProps) {
       sender: "user",
     };
 
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+
+    let response;
+    if (transferState.step !== "none") {
+      response = await handleTransfer(input);
+    } else {
+      response = getBotResponse(input);
+    }
+
     const botMessage: Message = {
       id: messages.length + 2,
-      text: getBotResponse(input),
+      text: response,
       sender: "bot",
     };
 
-    setMessages([...messages, userMessage, botMessage]);
-    setInput("");
+    setMessages((prev) => [...prev, botMessage]);
   };
 
   return (

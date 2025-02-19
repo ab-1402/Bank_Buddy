@@ -48,63 +48,16 @@ export class DatabaseStorage implements IStorage {
         }
       ]);
     }
+  }
 
-    // Check if we have any users
-    const existingUsers = await db.select().from(users);
+  private generateAccountNumber(): string {
+    return Math.floor(Math.random() * 9000000000 + 1000000000).toString();
+  }
 
-    if (existingUsers.length === 0) {
-      // Insert demo user
-      const [user] = await db.insert(users).values({
-        username: "abhay0123",
-        password: "1234",
-        role: "customer",
-        fullName: "Abhay Borase",
-        balance: "10000.00",
-      }).returning();
-
-      // Insert demo transactions
-      await db.insert(transactions).values([
-        {
-          userId: user.id,
-          amount: "415000.00",
-          type: "deposit",
-          description: "Salary Deposit",
-          timestamp: new Date("2024-01-15"),
-        },
-        {
-          userId: user.id,
-          amount: "124500.00",
-          type: "withdrawal",
-          description: "Rent Payment",
-          timestamp: new Date("2024-01-20"),
-        },
-        {
-          userId: user.id,
-          amount: "166000.00",
-          type: "deposit",
-          description: "Investment Returns",
-          timestamp: new Date("2024-02-01"),
-        }
-      ]);
-
-      // Insert demo fraud alerts
-      await db.insert(fraudAlerts).values([
-        {
-          userId: user.id,
-          description: "Unusual login attempt detected from new location",
-          severity: "medium",
-          timestamp: new Date("2024-02-15"),
-          resolved: false,
-        },
-        {
-          userId: user.id,
-          description: "Multiple failed transactions in quick succession",
-          severity: "high",
-          timestamp: new Date("2024-02-18"),
-          resolved: false,
-        }
-      ]);
-    }
+  private createUpiId(fullName: string): string {
+    // Get first name and remove any special characters
+    const firstName = fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+    return `${firstName}@upi`;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -117,9 +70,24 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async createUser(user: Omit<User, "id">): Promise<User> {
-    const [newUser] = await db.insert(users).values(user).returning();
-    return newUser;
+  async createUser(userData: Omit<User, "id">): Promise<User> {
+    return await db.transaction(async (tx) => {
+      // Create user
+      const [user] = await tx.insert(users).values({
+        ...userData,
+        balance: "10000.00", // Set initial balance
+      }).returning();
+
+      // Create associated account
+      await tx.insert(accounts).values({
+        accountNumber: this.generateAccountNumber(),
+        accountHolderName: userData.fullName,
+        upiId: this.createUpiId(userData.fullName),
+        balance: "10000.00", // Set initial balance
+      });
+
+      return user;
+    });
   }
 
   async getTransactions(userId: number): Promise<Transaction[]> {
