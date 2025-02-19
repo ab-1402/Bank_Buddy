@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SendHorizontal, X } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 
 type Message = {
   id: number;
@@ -10,30 +11,40 @@ type Message = {
   sender: "user" | "bot";
 };
 
-const responses = {
-  balance: "your balance is ₹850400.",
-  transaction: `Your recent 3 transactions are  1)Salary Deposit:-₹4,15,000.00
-2)Rent paid:-₹12,500.00
-3)Transfer to xxxxxx123:Rohan:-₹1,24,500.00`,
-
-  fraud: "If you notice any suspicious activity, please check the fraud alerts section.",
-  help: "I'm here to help! You can ask me about your balance, transactions, or fraud alerts.",
+const formatCurrency = (amount: string | number) => {
+  const value = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return value.toLocaleString('en-IN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 };
-
-function getBotResponse(input: string): string {
-  const lowercaseInput = input.toLowerCase();
-
-  if (lowercaseInput.includes("balance")) return responses.balance;
-  if (lowercaseInput.includes("transaction")) return responses.transaction;
-  if (lowercaseInput.includes("fraud")) return responses.fraud;
-  return responses.help;
-}
 
 type ChatbotProps = {
   onClose?: () => void;
 };
 
 export default function Chatbot({ onClose }: ChatbotProps) {
+  const { user } = useAuth();
+  const balance = parseFloat(user?.balance || "0");
+
+  const responses = {
+    balance: `your balance is ₹${formatCurrency(balance)}.`,
+    transaction: `Your recent 3 transactions are  1)Salary Deposit:-₹4,15,000.00
+2)Rent paid:-₹12,500.00
+3)Transfer to xxxxxx123:Rohan:-₹1,24,500.00`,
+    fraud: "If you notice any suspicious activity, please check the fraud alerts section.",
+    help: "I'm here to help! You can ask me about your balance, transactions, or fraud alerts.",
+  };
+
+  function getBotResponse(input: string): string {
+    const lowercaseInput = input.toLowerCase();
+
+    if (lowercaseInput.includes("balance")) return responses.balance;
+    if (lowercaseInput.includes("transaction")) return responses.transaction;
+    if (lowercaseInput.includes("fraud")) return responses.fraud;
+    return responses.help;
+  }
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
