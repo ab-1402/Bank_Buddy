@@ -32,7 +32,13 @@ type ChatbotProps = {
 
 export default function Chatbot({ onClose }: ChatbotProps) {
   const { user } = useAuth();
-  const balance = parseFloat(user?.balance || "0");
+
+  // Add query to get fresh user data
+  const { data: userData } = useQuery({
+    queryKey: ['/api/user'],
+  });
+
+  const balance = parseFloat(userData?.balance || "0");
   const [transferState, setTransferState] = useState<TransferState>({ step: "none" });
 
   const { data: upiAccount } = useQuery({
@@ -51,11 +57,11 @@ export default function Chatbot({ onClose }: ChatbotProps) {
       initial: "Sure, I can help you transfer money. Please provide the UPI ID of the receiver.",
       upi: "Great! Now please enter the amount you want to transfer.",
       upiNotFound: (upiId: string) => `Sorry, the UPI ID ${upiId} was not found in our system. Please check and try again.`,
-      amount: (amount: number, upiId: string, accountHolder: string) => 
+      amount: (amount: number, upiId: string, accountHolder: string) =>
         `You're about to transfer ₹${formatCurrency(amount)} to ${accountHolder} (${upiId}). Please confirm by typing 'yes' or 'no'.`,
-      insufficient: (amount: number) => 
+      insufficient: (amount: number) =>
         `Sorry, you don't have sufficient balance to transfer ₹${formatCurrency(amount)}. Your current balance is ₹${formatCurrency(balance)}.`,
-      success: (amount: number, accountHolder: string) => 
+      success: (amount: number, accountHolder: string) =>
         `Successfully transferred ₹${formatCurrency(amount)} to ${accountHolder}.`,
       cancelled: "Transfer cancelled. Is there anything else I can help you with?",
       invalid: "Please enter a valid amount (numbers only).",

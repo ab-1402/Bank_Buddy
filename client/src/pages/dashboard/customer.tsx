@@ -20,7 +20,11 @@ import AnalyticsChart from "@/components/analytics-chart";
 
 export default function CustomerDashboard() {
   const { user, logoutMutation } = useAuth();
-  const [showChat, setShowChat] = useState(false);
+
+  // Ensure user data is refreshed
+  const { data: userData, isLoading: loadingUser } = useQuery({
+    queryKey: ['/api/user'],
+  });
 
   const { data: transactions, isLoading: loadingTransactions } = useQuery({
     queryKey: [`/api/transactions/${user?.id}`],
@@ -30,7 +34,9 @@ export default function CustomerDashboard() {
     queryKey: [`/api/fraud-alerts/${user?.id}`],
   });
 
-  if (loadingTransactions || loadingAlerts) {
+  const [showChat, setShowChat] = useState(false);
+
+  if (loadingUser || loadingTransactions || loadingAlerts) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -38,7 +44,7 @@ export default function CustomerDashboard() {
     );
   }
 
-  const balance = parseFloat(user?.balance || "0");
+  const balance = parseFloat(userData?.balance || "0");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/50">
@@ -50,7 +56,7 @@ export default function CustomerDashboard() {
             <h1 className="text-xl font-bold">BankBuddy</h1>
           </div>
           <div className="ml-auto flex items-center space-x-4">
-            <span className="font-medium">Welcome, {user?.fullName}</span>
+            <span className="font-medium">Welcome, {userData?.fullName}</span>
             <Button 
               variant="ghost" 
               size="icon"
@@ -84,7 +90,7 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
 
-          {/* Transaction Analysis Card */}
+          {/* Rest of the components */}
           <Card className="bg-gradient-to-br from-secondary/5 to-secondary/10 border-secondary/10">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -97,7 +103,6 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
 
-          {/* Recent Transactions Card */}
           <Card className="md:col-span-2 bg-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
@@ -110,7 +115,6 @@ export default function CustomerDashboard() {
             </CardContent>
           </Card>
 
-          {/* Alert Section */}
           <Card className="md:col-span-2 bg-gradient-to-br from-destructive/5 to-destructive/10 border-destructive/10">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
