@@ -27,6 +27,8 @@ export default function CustomerDashboard() {
     );
   }
 
+  const balance = parseFloat(user?.balance || "0");
+
   return (
     <div className="min-h-screen bg-background">
       <div className="border-b">
@@ -52,17 +54,17 @@ export default function CustomerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              ${Number(user?.balance).toFixed(2)}
+              ${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Analytics</CardTitle>
+            <CardTitle>Transaction Analysis</CardTitle>
           </CardHeader>
           <CardContent>
-            <AnalyticsChart data={transactions} />
+            <AnalyticsChart data={transactions || []} />
           </CardContent>
         </Card>
 
@@ -71,7 +73,7 @@ export default function CustomerDashboard() {
             <CardTitle>Recent Transactions</CardTitle>
           </CardHeader>
           <CardContent>
-            <TransactionHistory transactions={transactions} />
+            <TransactionHistory transactions={transactions || []} />
           </CardContent>
         </Card>
 
@@ -80,7 +82,7 @@ export default function CustomerDashboard() {
             <CardTitle>Fraud Alerts</CardTitle>
           </CardHeader>
           <CardContent>
-            <FraudAlert alerts={fraudAlerts} />
+            <FraudAlert alerts={fraudAlerts || []} />
           </CardContent>
         </Card>
 

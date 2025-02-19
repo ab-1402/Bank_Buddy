@@ -30,13 +30,16 @@ export default function AnalyticsChart({ data, type = "transactions" }: Analytic
             axisLine={false}
             tickFormatter={(value) => `$${value}`}
           />
-          <Tooltip />
+          <Tooltip 
+            formatter={(value: number) => [`$${value.toFixed(2)}`, "Amount"]}
+            labelFormatter={(label) => `Date: ${label}`}
+          />
           <Line
             type="monotone"
             dataKey="value"
             stroke="hsl(var(--primary))"
             strokeWidth={2}
-            dot={false}
+            dot={true}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -55,7 +58,13 @@ function processTransactionData(transactions: Transaction[] = []) {
     date,
     value: transactions
       ?.filter(t => new Date(t.timestamp).toISOString().split('T')[0] === date)
-      ?.reduce((sum, t) => sum + Number(t.amount), 0) || 0
+      ?.reduce((sum, t) => {
+        const amount = parseFloat(t.amount);
+        if (t.type === 'withdrawal') {
+          return sum - amount;
+        }
+        return sum + amount;
+      }, 0) || 0
   }));
 }
 
@@ -63,6 +72,6 @@ function processCustomerData(customers: any[] = []) {
   // Mock growth data for demonstration
   return Array.from({ length: 7 }, (_, i) => ({
     date: `Day ${i + 1}`,
-    value: customers?.length + i || 0,
+    value: Math.max(5 + i * 2 + Math.floor(Math.random() * 3), 0),
   }));
 }
