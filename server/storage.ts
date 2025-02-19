@@ -21,14 +21,15 @@ export class DatabaseStorage implements IStorage {
     this.initializeDemoData().catch(console.error);
   }
 
-  private async initializeDemoData() {
+  async initializeDemoData() {
     try {
       // Check if we have any accounts
       const existingAccounts = await db.select().from(accounts);
+      console.log("Existing accounts:", existingAccounts);
 
       if (existingAccounts.length === 0) {
         // Insert demo accounts
-        await db.insert(accounts).values([
+        const demoAccounts = [
           {
             accountNumber: "1234567890",
             accountHolderName: "Rohan Sharma",
@@ -47,12 +48,14 @@ export class DatabaseStorage implements IStorage {
             upiId: "amit@upi",
             balance: "100000.00",
           }
-        ]);
+        ];
 
-        console.log("Demo accounts initialized successfully");
+        await db.insert(accounts).values(demoAccounts);
+        console.log("Demo accounts initialized with:", demoAccounts);
       }
     } catch (error) {
       console.error("Error initializing demo data:", error);
+      throw error; // Re-throw to ensure we know if initialization fails
     }
   }
 
@@ -108,9 +111,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAccountByUpiId(upiId: string): Promise<Account | undefined> {
-    const [account] = await db.select().from(accounts).where(eq(accounts.upiId, upiId));
-    console.log("Looking up UPI ID:", upiId, "Found account:", account); // Add logging
-    return account;
+    try {
+      const [account] = await db.select().from(accounts).where(eq(accounts.upiId, upiId));
+      console.log("Looking up UPI ID:", upiId, "Found account:", account);
+      return account;
+    } catch (error) {
+      console.error("Error looking up UPI ID:", upiId, error);
+      throw error;
+    }
   }
 
   async transferMoney(userId: number, amount: number, toUpiId: string): Promise<boolean> {

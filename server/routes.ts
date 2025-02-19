@@ -21,11 +21,19 @@ export function registerRoutes(app: Express): Server {
 
   // Get account by UPI ID
   app.get("/api/accounts/upi/:upiId", async (req, res) => {
-    const account = await storage.getAccountByUpiId(req.params.upiId);
-    if (!account) {
-      return res.status(404).json({ error: "Account not found" });
+    try {
+      console.log("Looking up UPI account for:", req.params.upiId);
+      const account = await storage.getAccountByUpiId(req.params.upiId);
+      if (!account) {
+        console.log("Account not found for UPI:", req.params.upiId);
+        return res.status(404).json({ error: "Account not found" });
+      }
+      console.log("Found account:", account);
+      res.json(account);
+    } catch (error) {
+      console.error("Error fetching account:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
-    res.json(account);
   });
 
   // Transfer money
