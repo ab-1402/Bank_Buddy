@@ -40,6 +40,7 @@ export const fraudAlerts = pgTable("fraud_alerts", {
 export const insertUserSchema = createInsertSchema(users)
   .extend({
     confirmPassword: z.string(),
+    balance: z.string().default("0"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
