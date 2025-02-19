@@ -11,6 +11,12 @@ type Message = {
   sender: "user" | "bot";
 };
 
+type TransferState = {
+  step: "initial" | "upi" | "amount" | "confirm" | "none";
+  upiId?: string;
+  amount?: number;
+};
+
 const formatCurrency = (amount: string | number) => {
   const value = typeof amount === 'string' ? parseFloat(amount) : amount;
   return value.toLocaleString('en-IN', {
@@ -26,6 +32,7 @@ type ChatbotProps = {
 export default function Chatbot({ onClose }: ChatbotProps) {
   const { user } = useAuth();
   const balance = parseFloat(user?.balance || "0");
+  const [transferState, setTransferState] = useState<TransferState>({ step: "none" });
 
   const responses = {
     balance: `your balance is ₹${formatCurrency(balance)}.`,
@@ -33,12 +40,65 @@ export default function Chatbot({ onClose }: ChatbotProps) {
 2)Rent paid:-₹12,500.00
 3)Transfer to xxxxxx123:Rohan:-₹1,24,500.00`,
     fraud: "If you notice any suspicious activity, please check the fraud alerts section.",
-    help: "I'm here to help! You can ask me about your balance, transactions, or fraud alerts.",
+    help: "I'm here to help! You can ask me about your balance, transactions, fraud alerts, or transferring money.",
+    transfer: {
+      initial: "Sure, I can help you transfer money. Please provide the UPI ID of the receiver.",
+      upi: "Great! Now please enter the amount you want to transfer.",
+      amount: (amount: number, upiId: string) => 
+        `You're about to transfer ₹${formatCurrency(amount)} to ${upiId}. Please confirm by typing 'yes' or 'no'.`,
+      insufficient: (amount: number) => 
+        `Sorry, you don't have sufficient balance to transfer ₹${formatCurrency(amount)}. Your current balance is ₹${formatCurrency(balance)}.`,
+      success: (amount: number, upiId: string) => 
+        `Successfully transferred ₹${formatCurrency(amount)} to ${upiId}.`,
+      cancelled: "Transfer cancelled. Is there anything else I can help you with?",
+      invalid: "Please enter a valid amount (numbers only).",
+    }
   };
+
+  function handleTransfer(input: string): string {
+    switch (transferState.step) {
+      case "initial":
+        setTransferState({ step: "upi", upiId: input });
+        return responses.transfer.upi;
+
+      case "upi":
+        const amount = parseFloat(input);
+        if (isNaN(amount) || amount <= 0) {
+          return responses.transfer.invalid;
+        }
+        if (amount > balance) {
+          return responses.transfer.insufficient(amount);
+        }
+        setTransferState({ ...transferState, step: "confirm", amount });
+        return responses.transfer.amount(amount, transferState.upiId!);
+
+      case "confirm":
+        if (input.toLowerCase() === "yes") {
+          // Here we would make the actual transfer API call
+          const result = responses.transfer.success(transferState.amount!, transferState.upiId!);
+          setTransferState({ step: "none" });
+          return result;
+        } else {
+          setTransferState({ step: "none" });
+          return responses.transfer.cancelled;
+        }
+
+      default:
+        return responses.transfer.initial;
+    }
+  }
 
   function getBotResponse(input: string): string {
     const lowercaseInput = input.toLowerCase();
 
+    if (transferState.step !== "none") {
+      return handleTransfer(input);
+    }
+
+    if (lowercaseInput.includes("transfer") || lowercaseInput.includes("send money")) {
+      setTransferState({ step: "initial" });
+      return responses.transfer.initial;
+    }
     if (lowercaseInput.includes("balance")) return responses.balance;
     if (lowercaseInput.includes("transaction")) return responses.transaction;
     if (lowercaseInput.includes("fraud")) return responses.fraud;
