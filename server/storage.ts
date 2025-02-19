@@ -108,7 +108,7 @@ export class MemStorage implements IStorage {
       password: "1234",
       role: "customer",
       fullName: "Abhay Borase",
-      balance: "258000.00",
+      balance: "10000.00",
     };
 
     this.users.set(1, sampleUser);
