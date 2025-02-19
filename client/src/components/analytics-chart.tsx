@@ -54,7 +54,7 @@ function processTransactionData(transactions: Transaction[] = []) {
   return last7Days.map(date => ({
     date,
     value: transactions
-      ?.filter(t => t.timestamp.split('T')[0] === date)
+      ?.filter(t => new Date(t.timestamp).toISOString().split('T')[0] === date)
       ?.reduce((sum, t) => sum + Number(t.amount), 0) || 0
   }));
 }
