@@ -54,10 +54,7 @@ export default function CustomerDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">
-              ₹{balance.toLocaleString('en-IN', { 
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-              })}
+              ₹850400.00
             </div>
           </CardContent>
         </Card>

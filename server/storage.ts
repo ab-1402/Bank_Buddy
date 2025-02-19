@@ -10,18 +10,34 @@ const sampleTransactions: Transaction[] = [
   {
     id: 1,
     userId: 1,
-    amount: "3000.00",
+    amount: "415000.00",
     type: "deposit",
-    description: "Salary Advance",
-    timestamp: new Date("2024-02-15").toISOString(),
+    description: "Salary Deposit",
+    timestamp: new Date("2024-01-15").toISOString(),
   },
   {
     id: 2,
     userId: 1,
-    amount: "2000.00",
+    amount: "124500.00",
+    type: "withdrawal",
+    description: "Rent Payment",
+    timestamp: new Date("2024-01-20").toISOString(),
+  },
+  {
+    id: 3,
+    userId: 1,
+    amount: "166000.00",
     type: "deposit",
-    description: "Savings Transfer",
-    timestamp: new Date("2024-02-18").toISOString(),
+    description: "Investment Returns",
+    timestamp: new Date("2024-02-01").toISOString(),
+  },
+  {
+    id: 4,
+    userId: 1,
+    amount: "66400.00",
+    type: "withdrawal",
+    description: "Utility Bills",
+    timestamp: new Date("2024-02-10").toISOString(),
   },
 ];
 
@@ -65,10 +81,10 @@ export class MemStorage implements IStorage {
     const sampleUser: User = {
       id: 1,
       username: "abhay0123",
-      password: "hashed_password_here",
+      password: "1234",
       role: "customer",
-      fullName: "Abhay Kumar",
-      balance: "5000.00",
+      fullName: "Abhay Borase",
+      balance: "258000.00",
     };
 
     this.users.set(1, sampleUser);

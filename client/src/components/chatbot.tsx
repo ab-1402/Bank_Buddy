@@ -11,8 +11,11 @@ type Message = {
 };
 
 const responses = {
-  balance: "You can check your balance at the top of the dashboard.",
-  transaction: "Your recent transactions are shown in the transaction history section.",
+  balance: "your balance is ₹850400.",
+  transaction: `Your recent 3 transactions are  1)Salary Deposit:-₹4,15,000.00
+2)Rent paid:-₹12,500.00
+3)Transfer to xxxxxx123:Rohan:-₹1,24,500.00`,
+
   fraud: "If you notice any suspicious activity, please check the fraud alerts section.",
   help: "I'm here to help! You can ask me about your balance, transactions, or fraud alerts.",
 };
