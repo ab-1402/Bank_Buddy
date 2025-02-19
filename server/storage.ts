@@ -17,8 +17,8 @@ export class DatabaseStorage implements IStorage {
       checkPeriod: 86400000,
     });
 
-    // Initialize demo data if not exists
-    this.initializeDemoData();
+    // Initialize demo data immediately
+    this.initializeDemoData().catch(console.error);
   }
 
   private async initializeDemoData() {
@@ -61,7 +61,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   private createUpiId(fullName: string): string {
-    // Get first name and remove any special characters
     const firstName = fullName.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
     return `${firstName}@upi`;
   }
@@ -110,11 +109,11 @@ export class DatabaseStorage implements IStorage {
 
   async getAccountByUpiId(upiId: string): Promise<Account | undefined> {
     const [account] = await db.select().from(accounts).where(eq(accounts.upiId, upiId));
+    console.log("Looking up UPI ID:", upiId, "Found account:", account); // Add logging
     return account;
   }
 
   async transferMoney(userId: number, amount: number, toUpiId: string): Promise<boolean> {
-    // Start a transaction to ensure atomicity
     return await db.transaction(async (tx) => {
       // Get sender's user record
       const [sender] = await tx
