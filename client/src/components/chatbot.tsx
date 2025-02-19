@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { SendHorizontal, X } from "lucide-react";
+import { SendHorizontal } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 
 type Message = {
   id: number;
@@ -34,6 +35,11 @@ export default function Chatbot({ onClose }: ChatbotProps) {
   const balance = parseFloat(user?.balance || "0");
   const [transferState, setTransferState] = useState<TransferState>({ step: "none" });
 
+  const { data: upiAccount } = useQuery({
+    queryKey: ['/api/accounts/upi', transferState.upiId],
+    enabled: transferState.step === "initial" && !!transferState.upiId,
+  });
+
   const responses = {
     balance: `your balance is ₹${formatCurrency(balance)}.`,
     transaction: `Your recent 3 transactions are  1)Salary Deposit:-₹4,15,000.00
@@ -44,12 +50,13 @@ export default function Chatbot({ onClose }: ChatbotProps) {
     transfer: {
       initial: "Sure, I can help you transfer money. Please provide the UPI ID of the receiver.",
       upi: "Great! Now please enter the amount you want to transfer.",
-      amount: (amount: number, upiId: string) => 
-        `You're about to transfer ₹${formatCurrency(amount)} to ${upiId}. Please confirm by typing 'yes' or 'no'.`,
+      upiNotFound: (upiId: string) => `Sorry, the UPI ID ${upiId} was not found in our system. Please check and try again.`,
+      amount: (amount: number, upiId: string, accountHolder: string) => 
+        `You're about to transfer ₹${formatCurrency(amount)} to ${accountHolder} (${upiId}). Please confirm by typing 'yes' or 'no'.`,
       insufficient: (amount: number) => 
         `Sorry, you don't have sufficient balance to transfer ₹${formatCurrency(amount)}. Your current balance is ₹${formatCurrency(balance)}.`,
-      success: (amount: number, upiId: string) => 
-        `Successfully transferred ₹${formatCurrency(amount)} to ${upiId}.`,
+      success: (amount: number, accountHolder: string) => 
+        `Successfully transferred ₹${formatCurrency(amount)} to ${accountHolder}.`,
       cancelled: "Transfer cancelled. Is there anything else I can help you with?",
       invalid: "Please enter a valid amount (numbers only).",
     }
@@ -58,7 +65,11 @@ export default function Chatbot({ onClose }: ChatbotProps) {
   function handleTransfer(input: string): string {
     switch (transferState.step) {
       case "initial":
-        setTransferState({ step: "upi", upiId: input });
+        const upiId = input.trim();
+        if (!upiAccount) {
+          return responses.transfer.upiNotFound(upiId);
+        }
+        setTransferState({ step: "upi", upiId });
         return responses.transfer.upi;
 
       case "upi":
@@ -70,12 +81,11 @@ export default function Chatbot({ onClose }: ChatbotProps) {
           return responses.transfer.insufficient(amount);
         }
         setTransferState({ ...transferState, step: "confirm", amount });
-        return responses.transfer.amount(amount, transferState.upiId!);
+        return responses.transfer.amount(amount, upiAccount.upiId, upiAccount.accountHolderName);
 
       case "confirm":
         if (input.toLowerCase() === "yes") {
-          // Here we would make the actual transfer API call
-          const result = responses.transfer.success(transferState.amount!, transferState.upiId!);
+          const result = responses.transfer.success(transferState.amount!, upiAccount.accountHolderName);
           setTransferState({ step: "none" });
           return result;
         } else {

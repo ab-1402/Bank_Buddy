@@ -1,11 +1,36 @@
 import { IStorage } from "./types";
-import { User, Transaction, FraudAlert } from "@shared/schema";
+import { User, Transaction, FraudAlert, Account } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
 
-// Sample transaction data for abhay0123
+// Sample account data
+const sampleAccounts: Account[] = [
+  {
+    id: 1,
+    accountNumber: "1234567890",
+    accountHolderName: "Rohan Sharma",
+    upiId: "rohan@upi",
+    balance: "50000.00",
+  },
+  {
+    id: 2,
+    accountNumber: "9876543210",
+    accountHolderName: "Priya Patel",
+    upiId: "priya@upi",
+    balance: "75000.00",
+  },
+  {
+    id: 3,
+    accountNumber: "5678901234",
+    accountHolderName: "Amit Kumar",
+    upiId: "amit@upi",
+    balance: "100000.00",
+  }
+];
+
+// Sample transaction data for demo
 const sampleTransactions: Transaction[] = [
   {
     id: 1,
@@ -30,15 +55,7 @@ const sampleTransactions: Transaction[] = [
     type: "deposit",
     description: "Investment Returns",
     timestamp: new Date("2024-02-01").toISOString(),
-  },
-  {
-    id: 4,
-    userId: 1,
-    amount: "66400.00",
-    type: "withdrawal",
-    description: "Utility Bills",
-    timestamp: new Date("2024-02-10").toISOString(),
-  },
+  }
 ];
 
 // Sample fraud alerts
@@ -58,13 +75,14 @@ const sampleFraudAlerts: FraudAlert[] = [
     severity: "high",
     timestamp: new Date("2024-02-18").toISOString(),
     resolved: false,
-  },
+  }
 ];
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private transactions: Map<number, Transaction[]>;
   private fraudAlerts: Map<number, FraudAlert[]>;
+  private accounts: Map<number, Account>;
   sessionStore: session.Store;
   currentId: number;
 
@@ -72,9 +90,15 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.transactions = new Map();
     this.fraudAlerts = new Map();
+    this.accounts = new Map();
     this.currentId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
+    });
+
+    // Initialize sample data
+    sampleAccounts.forEach(account => {
+      this.accounts.set(account.id, account);
     });
 
     // Initialize with sample data
@@ -120,6 +144,12 @@ export class MemStorage implements IStorage {
   async getCustomers(): Promise<User[]> {
     return Array.from(this.users.values()).filter(
       (user) => user.role === "customer"
+    );
+  }
+
+  async getAccountByUpiId(upiId: string): Promise<Account | undefined> {
+    return Array.from(this.accounts.values()).find(
+      (account) => account.upiId === upiId
     );
   }
 }

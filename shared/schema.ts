@@ -11,6 +11,14 @@ export const users = pgTable("users", {
   balance: decimal("balance", { precision: 10, scale: 2 }).default("0").notNull(),
 });
 
+export const accounts = pgTable("accounts", {
+  id: serial("id").primaryKey(),
+  accountNumber: text("account_number").notNull().unique(),
+  accountHolderName: text("account_holder_name").notNull(),
+  upiId: text("upi_id").notNull().unique(),
+  balance: decimal("balance", { precision: 10, scale: 2 }).default("0").notNull(),
+});
+
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id),
@@ -42,3 +50,4 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type FraudAlert = typeof fraudAlerts.$inferSelect;
+export type Account = typeof accounts.$inferSelect;
