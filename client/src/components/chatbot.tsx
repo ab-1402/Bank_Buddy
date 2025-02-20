@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SendHorizontal } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Account } from "@shared/schema";
+import { Account, User } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 
 type Message = {
@@ -36,7 +36,7 @@ type ChatbotProps = {
 
 export default function Chatbot({ onClose }: ChatbotProps) {
   const { user } = useAuth();
-  const { data: userData } = useQuery({
+  const { data: userData } = useQuery<User>({
     queryKey: ['/api/user'],
   });
 
@@ -49,7 +49,7 @@ export default function Chatbot({ onClose }: ChatbotProps) {
   });
 
   const transferMutation = useMutation({
-    mutationFn: async ({ amount, toUpiId }: { amount: number, toUpiId: string }) => {
+    mutationFn: async ({ amount, toUpiId }: { amount: number; toUpiId: string }) => {
       const response = await fetch('/api/transfer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

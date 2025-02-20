@@ -53,8 +53,7 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Changed port from 5000 to 5051
-  const PORT = 5051;
+  const PORT = process.env.PORT || 5000;
   server.listen(PORT, "0.0.0.0", () => {
     log(`serving on port ${PORT}`);
   });
