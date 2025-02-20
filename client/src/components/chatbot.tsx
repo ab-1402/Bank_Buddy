@@ -45,7 +45,7 @@ export default function Chatbot({ onClose }: ChatbotProps) {
 
   const { data: upiAccount, isLoading: isUpiLoading } = useQuery<Account>({
     queryKey: ['/api/accounts/upi', transferState.upiId],
-    enabled: transferState.step === "initial" && !!transferState.upiId,
+    enabled: !!transferState.upiId && transferState.step === "initial",
   });
 
   const transferMutation = useMutation({
@@ -93,16 +93,22 @@ export default function Chatbot({ onClose }: ChatbotProps) {
   async function handleTransfer(input: string): Promise<string> {
     switch (transferState.step) {
       case "initial":
-        setTransferState({ step: "initial", upiId: input.trim() });
-        if (isUpiLoading) {
-          return responses.transfer.loading;
-        }
-        if (!upiAccount) {
+        const cleanUpiId = input.trim();
+        setTransferState({ step: "initial", upiId: cleanUpiId });
+
+        try {
+          const response = await fetch(`/api/accounts/upi/${cleanUpiId}`);
+          if (!response.ok) {
+            setTransferState({ step: "none" });
+            return responses.transfer.upiNotFound(cleanUpiId);
+          }
+          const account = await response.json();
+          setTransferState({ step: "upi", upiId: cleanUpiId });
+          return responses.transfer.upi;
+        } catch (error) {
           setTransferState({ step: "none" });
-          return responses.transfer.upiNotFound(input.trim());
+          return responses.transfer.upiNotFound(cleanUpiId);
         }
-        setTransferState({ step: "upi", upiId: input.trim() });
-        return responses.transfer.upi;
 
       case "upi":
         const amount = parseFloat(input);
