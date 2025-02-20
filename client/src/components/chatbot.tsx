@@ -23,6 +23,8 @@ type TransferState = {
 const formatCurrency = (amount: string | number) => {
   const value = typeof amount === 'string' ? parseFloat(amount) : amount;
   return value.toLocaleString('en-IN', {
+    style: 'currency',
+    currency: 'INR',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   });
@@ -34,7 +36,6 @@ type ChatbotProps = {
 
 export default function Chatbot({ onClose }: ChatbotProps) {
   const { user } = useAuth();
-
   const { data: userData } = useQuery({
     queryKey: ['/api/user'],
   });
@@ -55,7 +56,8 @@ export default function Chatbot({ onClose }: ChatbotProps) {
         body: JSON.stringify({ amount, toUpiId }),
       });
       if (!response.ok) {
-        throw new Error('Transfer failed');
+        const error = await response.json();
+        throw new Error(error.error || 'Transfer failed');
       }
       return response.json();
     },
@@ -65,11 +67,11 @@ export default function Chatbot({ onClose }: ChatbotProps) {
   });
 
   const responses = {
-    balance: `Your balance is ₹${formatCurrency(balance)}.`,
+    balance: `Your balance is ${formatCurrency(balance)}.`,
     transaction: `Your recent 3 transactions are:
-1) Salary Deposit: ₹4,15,000.00
-2) Rent paid: ₹12,500.00
-3) Transfer to xxxxxx123: Rohan: ₹1,24,500.00`,
+1) Salary Deposit: ${formatCurrency(415000)}
+2) Rent paid: ${formatCurrency(12500)}
+3) Transfer to xxxxxx123: Rohan: ${formatCurrency(124500)}`,
     fraud: "If you notice any suspicious activity, please check the fraud alerts section.",
     help: "I'm here to help! You can ask me about your balance, transactions, fraud alerts, or transferring money.",
     transfer: {
@@ -77,11 +79,11 @@ export default function Chatbot({ onClose }: ChatbotProps) {
       upi: "Great! Now please enter the amount you want to transfer.",
       upiNotFound: (upiId: string) => `Sorry, the UPI ID ${upiId} was not found in our system. Please check and try again.`,
       amount: (amount: number, upiId: string, accountHolder: string) =>
-        `You're about to transfer ₹${formatCurrency(amount)} to ${accountHolder} (${upiId}). Please confirm by typing 'yes' or 'no'.`,
+        `You're about to transfer ${formatCurrency(amount)} to ${accountHolder} (${upiId}). Please confirm by typing 'yes' or 'no'.`,
       insufficient: (amount: number) =>
-        `Sorry, you don't have sufficient balance to transfer ₹${formatCurrency(amount)}. Your current balance is ₹${formatCurrency(balance)}.`,
+        `Sorry, you don't have sufficient balance to transfer ${formatCurrency(amount)}. Your current balance is ${formatCurrency(balance)}.`,
       success: (amount: number, accountHolder: string) =>
-        `Successfully transferred ₹${formatCurrency(amount)} to ${accountHolder}.`,
+        `Successfully transferred ${formatCurrency(amount)} to ${accountHolder}.`,
       cancelled: "Transfer cancelled. Is there anything else I can help you with?",
       invalid: "Please enter a valid amount (numbers only).",
       loading: "Please wait while I verify the UPI ID..."
@@ -107,11 +109,12 @@ export default function Chatbot({ onClose }: ChatbotProps) {
         if (isNaN(amount) || amount <= 0) {
           return responses.transfer.invalid;
         }
-        if (amount > balance) {
+        if (amount > parseFloat(balance.toString())) {
+          setTransferState({ step: "none" });
           return responses.transfer.insufficient(amount);
         }
         setTransferState({ ...transferState, step: "confirm", amount });
-        return responses.transfer.amount(amount, transferState.upiId!, upiAccount.accountHolderName);
+        return responses.transfer.amount(amount, transferState.upiId!, upiAccount!.accountHolderName);
 
       case "confirm":
         if (input.toLowerCase() === "yes" && transferState.amount && transferState.upiId) {
@@ -120,12 +123,12 @@ export default function Chatbot({ onClose }: ChatbotProps) {
               amount: transferState.amount,
               toUpiId: transferState.upiId
             });
-            const result = responses.transfer.success(transferState.amount, upiAccount.accountHolderName);
+            const result = responses.transfer.success(transferState.amount, upiAccount!.accountHolderName);
             setTransferState({ step: "none" });
             return result;
           } catch (error) {
             setTransferState({ step: "none" });
-            return "Sorry, the transfer failed. Please try again later.";
+            return error instanceof Error ? error.message : "Sorry, the transfer failed. Please try again later.";
           }
         } else {
           setTransferState({ step: "none" });
