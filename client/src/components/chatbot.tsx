@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { SendHorizontal } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Account, User } from "@shared/schema";
+import { Account, User, Transaction } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
 
 type Message = {
@@ -40,6 +40,10 @@ export default function Chatbot({ onClose }: ChatbotProps) {
     queryKey: ['/api/user'],
   });
 
+  const { data: transactions } = useQuery<Transaction[]>({
+    queryKey: [`/api/transactions/${user?.id}`],
+  });
+
   const balance = userData?.balance ?? 0;
   const [transferState, setTransferState] = useState<TransferState>({ step: "none" });
 
@@ -66,14 +70,24 @@ export default function Chatbot({ onClose }: ChatbotProps) {
     },
   });
 
+  function getLastThreeTransactions(): string {
+    if (!transactions || transactions.length === 0) {
+      return "No recent transactions found.";
+    }
+
+    const lastThree = transactions.slice(-3).reverse();
+    return lastThree.map((t, index) => {
+      const amount = parseFloat(t.amount);
+      const formattedAmount = formatCurrency(Math.abs(amount));
+      const symbol = t.type === "withdrawal" ? "-" : "+";
+      return `${index + 1}) ${t.description}: ${symbol}${formattedAmount}`;
+    }).join("\n");
+  }
+
   const responses = {
     balance: `Your balance is ${formatCurrency(balance)}.`,
-    transaction: `Your recent 3 transactions are:
-1) Salary Deposit: ${formatCurrency(415000)}
-2) Rent paid: ${formatCurrency(12500)}
-3) Transfer to xxxxxx123: Rohan: ${formatCurrency(124500)}`,
-    fraud: "If you notice any suspicious activity, please check the fraud alerts section.",
-    help: "I'm here to help! You can ask me about your balance, transactions, fraud alerts, or transferring money.",
+    transaction: `Your recent 3 transactions are:\n${getLastThreeTransactions()}`,
+    help: "I'm here to help! You can ask me about your balance, transactions, or transferring money.",
     transfer: {
       initial: "Sure, I can help you transfer money. Please provide the UPI ID of the receiver.",
       upi: "Great! Now please enter the amount you want to transfer.",
